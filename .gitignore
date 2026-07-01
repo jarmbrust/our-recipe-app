@@ -23,7 +23,7 @@ __pycache__/
 *.swp
 *.swo
 *~
-no_repo/
+_internal_docs/
 .nuxt/
 .output/
 .data/
