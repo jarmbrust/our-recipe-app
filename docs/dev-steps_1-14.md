@@ -152,7 +152,7 @@
    - `PUT /auth/user`, `PUT /auth/email`, `PUT /auth/password` — stub with `{message: "..."}` so the contract exists; full behavior can be body-filling work.
 5. `app/services/cookies.py`: build the `Set-Cookie` value per env.
    - `ENV=dev`: no `Domain`, no `Secure`.
-   - `ENV=prod`: `Domain=.<root-domain>; Secure; SameSite=Lax; HttpOnly; Path=/; Max-Age=86400`.
+   - `ENV=prod`: `Domain=.ourrecipeapp.com; Secure; SameSite=Lax; HttpOnly; Path=/; Max-Age=86400`.
 6. Tests in `backend/tests/test_auth.py` using `httpx.AsyncClient(app=app, base_url="http://test")`:
    - Register success → 201, `Set-Cookie` present, attributes correct for env.
    - Register duplicate username → 409.
@@ -242,11 +242,11 @@ Heroicons per arch §8. Sidebar collapses to hamburger drawer on mobile; grid `g
 
 ## Step 13 — Deployment
 
-- Buy `<root-domain>` (Porkbun / Cloudflare Registrar / Namecheap).
-- Backend on Railway: Nixpacks auto-detects Poetry; add `Procfile` with `web: uvicorn app.main:app --host 0.0.0.0 --port $PORT`. Env vars: `DATABASE_URL` (Neon), `JWT_SECRET`, `ENV=prod`, `CORS_ORIGINS=https://app.<root-domain>`.
+- Buy `ourrecipeapp.com` (Porkbun / Cloudflare Registrar / Namecheap).
+- Backend on Railway: Nixpacks auto-detects Poetry; add `Procfile` with `web: uvicorn app.main:app --host 0.0.0.0 --port $PORT`. Env vars: `DATABASE_URL` (Neon), `JWT_SECRET`, `ENV=prod`, `CORS_ORIGINS=https://app.ourrecipeapp.com`.
 - DB on Neon free tier; copy pooled connection string into Railway's `DATABASE_URL`.
-- Frontend on Vercel: root `frontend/`, `NEXT_PUBLIC_API_URL=https://api.<root-domain>` (must be present at **build** time — it's bundled into the client).
-- DNS: `app.<root-domain>` → Vercel CNAME, `api.<root-domain>` → Railway CNAME; SSL auto-provisioned.
+- Frontend on Vercel: root `frontend/`, `NEXT_PUBLIC_API_URL=https://api.ourrecipeapp.com` (must be present at **build** time — it's bundled into the client).
+- DNS: `app.ourrecipeapp.com` → Vercel CNAME, `api.ourrecipeapp.com` → Railway CNAME; SSL auto-provisioned.
 - Final smoke: register, login, create + edit + delete a recipe, view it, log out — over `https://`.
 
 ## Step 14 — Post-MVP stubs to leave room for
