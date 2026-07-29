@@ -24,6 +24,7 @@ __pycache__/
 *.swo
 *~
 _internal_docs/
+frontend/openapi.json
 .next/
 out/
 .cache/
