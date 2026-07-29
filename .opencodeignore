@@ -1,0 +1,10 @@
+# Exclude sensitive files
+.env
+.env.local
+.env.*.local
+
+# Adding for completeness
+*.pem
+*.key
+secrets/
+credentials/
