@@ -12,3 +12,9 @@ docker compose up -d          # start local PostgreSQL
 cd backend && poetry install  # install backend deps
 cd ../frontend && pnpm install # install frontend deps
 ```
+
+### Versions
+
+```bash
+python 3.14
+```

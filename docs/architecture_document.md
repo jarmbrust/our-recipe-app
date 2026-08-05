@@ -33,10 +33,10 @@
 
 A single registered domain named `ourrecipeapp.com` with two subdomains:
 
-| Host                                          | Points to | Serves           |
-| --------------------------------------------- | --------- | ---------------- |
+| Host                                                | Points to | Serves           |
+| --------------------------------------------------- | --------- | ---------------- |
 | `app.ourrecipeapp.com` (or apex `ourrecipeapp.com`) | Vercel    | Next.js frontend |
-| `api.ourrecipeapp.com`                           | Railway   | FastAPI backend  |
+| `api.ourrecipeapp.com`                              | Railway   | FastAPI backend  |
 
 ### Why This Matters — Cross-Site Cookie Problem
 
@@ -530,12 +530,12 @@ FastAPI auto-publishes an **OpenAPI 3** schema at `/openapi.json` on the live ba
 
 **Workflow:**
 
-| Step                           | Where                                                                                       | What                                                                    |
-| ------------------------------ | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Step                           | Where                                                                                          | What                                                                    |
+| ------------------------------ | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
 | Backend serves `/openapi.json` | `http://localhost:8000/openapi.json` (dev), `https://api.ourrecipeapp.com/openapi.json` (prod) | Source of truth for the API contract                                    |
-| Generator runs in frontend     | `frontend/openapi.json` (saved)                                                             | Snapshot fetched from the live backend                                  |
-| Spec transformed to TS         | `pnpm run codegen` → `frontend/types/api.d.ts`                                              | Generated types + client functions                                      |
-| Frontend imports the client    | any `.ts/.tsx`                                                                              | `import { listRecipes } from "~/types/api"` (or wherever codegen emits) |
+| Generator runs in frontend     | `frontend/openapi.json` (saved)                                                                | Snapshot fetched from the live backend                                  |
+| Spec transformed to TS         | `pnpm run codegen` → `frontend/types/api.d.ts`                                                 | Generated types + client functions                                      |
+| Frontend imports the client    | any `.ts/.tsx`                                                                                 | `import { listRecipes } from "~/types/api"` (or wherever codegen emits) |
 
 **Tooling:** [`openapi-typescript`](https://openapi-ts.dev/) for types plus [`openapi-fetch`](https://openapi-ts.dev/openapi-fetch/) for the runtime client gives fully-typed functions like `listRecipes({ query: { q: "cookies", page: 1, limit: 20 }, credentials: "include" })` with no manual DTOs to maintain.
 
@@ -560,14 +560,14 @@ FastAPI auto-publishes an **OpenAPI 3** schema at `/openapi.json` on the live ba
 
 ### Cookie Configuration
 
-| Attribute  | Value            | Purpose                                           |
-| ---------- | ---------------- | ------------------------------------------------- |
-| `HttpOnly` | yes              | JS cannot read the token (XSS protection)         |
-| `Secure`   | yes              | HTTPS only                                        |
-| `SameSite` | `Lax`            | Works across subdomains of one registrable domain |
+| Attribute  | Value               | Purpose                                           |
+| ---------- | ------------------- | ------------------------------------------------- |
+| `HttpOnly` | yes                 | JS cannot read the token (XSS protection)         |
+| `Secure`   | yes                 | HTTPS only                                        |
+| `SameSite` | `Lax`               | Works across subdomains of one registrable domain |
 | `Domain`   | `.ourrecipeapp.com` | Shared between `app.` and `api.` subdomains       |
-| `Path`     | `/`              | Sent for all routes                               |
-| `Max-Age`  | `86400`          | 24-hour expiry                                    |
+| `Path`     | `/`                 | Sent for all routes                               |
+| `Max-Age`  | `86400`             | 24-hour expiry                                    |
 
 > **Local dev:** On `localhost`, omit `Domain` and `Secure` (browsers reject `Secure` cookies on `http://localhost` in some cases; and `localhost` cannot have a `Domain` attribute set to a real domain). Use environment-based cookie settings: `Secure` + `Domain` in production, neither locally.
 
@@ -861,5 +861,27 @@ Next.js 16, React 19, Zustand, FastAPI, async SQLAlchemy, Alembic, and the Docke
 - **Scope for MVP is small:** Docker runs only PostgreSQL locally via `docker-compose.yml` (a `postgres` service for dev and a `postgres-test` service for tests). The application itself is not containerized for MVP.
 - **Commands in practice:** `docker compose up -d`, `docker compose down`, `docker compose logs postgres`. That covers the runtime surface area needed for local development.
 - **Railway does not require a custom Dockerfile:** it builds the backend with Nixpacks. Use a `Procfile` (or `railway.json`) to declare the start command — see §1 and the Procfile discussion in earlier planning.
+
+### Python runtime dependencies (Poetry-managed)
+
+Added in a single `poetry add` call from `backend/`:
+
+| Package spec          | Purpose                                                     | Extras pulled                                                                                      |
+| --------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `fastapi[standard]`   | Web framework                                               | `httpx`, `jinja2`, `python-multipart`, `uvicorn` (informational — uvicorn still listed explicitly) |
+| `uvicorn[standard]`   | ASGI server (`poetry run uvicorn ...`)                      | `uvloop`, `httptools`, `watchfiles`, `websockets`, `PyYAML`, `typing-extensions`, `colorama`       |
+| `pydantic[email]`     | Data validation                                             | `email-validator`                                                                                  |
+| `pydantic-settings`   | Env-driven `Settings(BaseSettings)` for `app/config.py`     | none                                                                                               |
+| `sqlalchemy[asyncio]` | 2.x async ORM                                               | `greenlet` (SQLAlchemy async internals)                                                            |
+| `asyncpg`             | Async Postgres driver (`create_async_engine(DATABASE_URL)`) | none                                                                                               |
+| `alembic`             | Migrations (used in Step 3)                                 | none                                                                                               |
+| `pyjwt`               | JWT sign/verify (HS256)                                     | none — HS256 doesn't need `[crypto]` extras                                                        |
+| `passlib[bcrypt]`     | Password hashing framework                                  | `bcrypt` (the actual C-extension hasher)                                                           |
+| `python-multipart`    | Multipart form parser (`fastapi.Form(...)` deps)            | none — already a transitive of `fastapi[standard]`; listed explicitly is fine                      |
+| `loguru`              | Logging (JSON to stdout, captured by Railway)               | none                                                                                               |
+
+ℹ️ Note for editors: no version constraints are set; Poetry resolves latest compatible with >=3.14 under the project's requires-python.
+
+ℹ️ Shell gotcha: running this with zsh requires each bracketed spec to be quoted or run via noglob poetry add ... — zsh otherwise treats [standard] as a glob and aborts before Poetry runs.
 
 ---

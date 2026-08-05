@@ -25,6 +25,7 @@
      README.md
      AGENTS.md
    ```
+
 3. Write `.gitignore` for:
    - `node_modules/`, `.next/`, `.venv/`
    - `__pycache__/`, `*.pyc`
@@ -38,7 +39,7 @@
 5. `docker-compose.yml` — two services only:
    - `postgres` on `5432`, persistent named volume, healthcheck.
    - `postgres-test` on `5433` for pytest, ephemeral.
-   Both `postgres:16-alpine`.
+     Both `postgres:16-alpine`.
 6. Verify with `docker compose up -d` → `docker compose ps` shows both `Up (healthy)`. Stop with `docker compose down`.
 
 **Verification:** repo is clean; both Postgres services healthy.
@@ -49,7 +50,7 @@
 
 **Goal:** `poetry run uvicorn` boots a hello-world app that returns a version string at `/api/health`.
 
-1. `cd backend && poetry init -n`. Pin Python: `poetry env use 3.12` (or 3.13 — choose one and document in `README.md`).
+1. `cd backend && poetry init -n`. Pin Python: `poetry env use 3.14`.
 2. Runtime deps (single `poetry add` call):
    - `fastapi[standard]`
    - `uvicorn[standard]`
@@ -58,7 +59,7 @@
    - `sqlalchemy[asyncio]`
    - `asyncpg`
    - `alembic`
-   - `pyjwt` (or `python-jose[cryptography]`)
+   - `pyjwt`
    - `passlib[bcrypt]`
    - `python-multipart`
    - `loguru`
@@ -91,6 +92,7 @@
        script.py.mako
      alembic.ini
    ```
+
 5. `app/config.py`: pydantic-settings `Settings` reading `.env`. Fields:
    - `DATABASE_URL`
    - `JWT_SECRET`
@@ -102,7 +104,7 @@
 7. `app/db/session.py`: `create_async_engine`, `async_sessionmaker(expire_on_commit=False)`, `get_db()` dependency yielding `AsyncSession`.
 8. `app/api/deps.py`: empty placeholders for `get_current_user`.
 9. `pyproject.toml` tool configs:
-   - `[tool.ruff]`: `line-length = 100`, `target-version = "py312"`, rules `E,F,W,I,UP,B,SIM`.
+   - `[tool.ruff]`: `line-length = 100`, `target-version = "py314"`, rules `E,F,W,I,UP,B,SIM`.
    - `[tool.ruff.format]`: quote-style `preserve`.
    - `[tool.mypy]`: `strict = true`, `plugins = ["pydantic.mypy"]`.
 
@@ -187,6 +189,7 @@
    ```python
    {"items": [...], "total": int, "page": int, "limit": int, "total_pages": int}
    ```
+
 4. Search: `Recipe.title ILIKE '%q%' OR Recipe.description ILIKE '%q%'`. Cap `q` length server-side at 256 chars to bound query cost.
 5. Single helper `assert_can_view(recipe, current_user)`:
    - Soft-deleted → 404.
