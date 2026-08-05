@@ -33,3 +33,10 @@ out/
 htmlcov/
 .mypy_cache/
 .ruff_cache/
+*.pyc
+alembic/versions/__pycache__/
+.env, .env.*
+.DS_Store
+frontend/openapi.json
+frontend/types/api.d.ts
+

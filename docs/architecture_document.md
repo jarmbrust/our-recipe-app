@@ -1,25 +1,25 @@
 # Our Recipe App — Architecture Document
 
-**Version:** 1.0 (MVP)  
-**Date:** July 20, 2026  
+**Version:** 1.0 (MVP)
+**Date:** July 20, 2026
 **Status:** Active MVP architecture document. Archived Nuxt/Vue version in `architecture_document_archived.md`.
 
 ---
 
 ## 1. Technology Stack
 
-| Component | Technology | Hosting |
-|-----------|------------|---------|
-| Frontend | Next.js 16 (App Router) + React 19 + Tailwind CSS v4 (PostCSS plugin) | Vercel (Hobby tier, $0/mo) |
-| Backend | FastAPI (Python) + Poetry | Railway ($0-5/mo) |
-| Database | PostgreSQL 16 | Neon (Free tier, $0/mo) |
-| Image Storage | Cloudinary (unsigned uploads for MVP) | Cloudinary (Free tier, $0/mo) |
-| State Management | Zustand | — |
-| Error Tracking | Sentry | Sentry (Free tier, $0/mo) |
-| Version Control | GitHub | Free |
-| Custom Domain | Registrar TBD | ~$12/yr |
-| Package Manager (frontend) | pnpm (via corepack) | — |
-| **Total monthly cost** | | **$0-5/mo + ~$1/mo amortized domain** |
+| Component                  | Technology                                                            | Hosting                               |
+| -------------------------- | --------------------------------------------------------------------- | ------------------------------------- |
+| Frontend                   | Next.js 16 (App Router) + React 19 + Tailwind CSS v4 (PostCSS plugin) | Vercel (Hobby tier, $0/mo)            |
+| Backend                    | FastAPI (Python) + Poetry                                             | Railway ($0-5/mo)                     |
+| Database                   | PostgreSQL 16                                                         | Neon (Free tier, $0/mo)               |
+| Image Storage              | Cloudinary (unsigned uploads for MVP)                                 | Cloudinary (Free tier, $0/mo)         |
+| State Management           | Zustand                                                               | —                                     |
+| Error Tracking             | Sentry                                                                | Sentry (Free tier, $0/mo)             |
+| Version Control            | GitHub                                                                | Free                                  |
+| Custom Domain              | Registrar TBD                                                         | ~$12/yr                               |
+| Package Manager (frontend) | pnpm (via corepack)                                                   | —                                     |
+| **Total monthly cost**     |                                                                       | **$0-5/mo + ~$1/mo amortized domain** |
 
 **Monorepo structure:** Single GitHub repository with `backend/` and `frontend/` directories.
 
@@ -31,27 +31,27 @@
 
 ### Domain Layout
 
-A single registered domain (referred to below as `<root-domain>`, e.g. `ourrecipeapp.com`) with two subdomains:
+A single registered domain named `ourrecipeapp.com` with two subdomains:
 
-| Host | Points to | Serves |
-|------|-----------|--------|
-| `app.<root-domain>` (or apex `<root-domain>`) | Vercel | Next.js frontend |
-| `api.<root-domain>` | Railway | FastAPI backend |
+| Host                                                | Points to | Serves           |
+| --------------------------------------------------- | --------- | ---------------- |
+| `app.ourrecipeapp.com` (or apex `ourrecipeapp.com`) | Vercel    | Next.js frontend |
+| `api.ourrecipeapp.com`                              | Railway   | FastAPI backend  |
 
 ### Why This Matters — Cross-Site Cookie Problem
 
-The authentication design uses a JWT stored in an `HttpOnly` cookie (see Section 5). Browsers only send such a cookie on requests the browser considers **same-site**. "Same-site" is decided by the **registrable domain** (eTLD+1), *not* the full hostname and *not* the port.
+The authentication design uses a JWT stored in an `HttpOnly` cookie (see Section 5). Browsers only send such a cookie on requests the browser considers **same-site**. "Same-site" is decided by the **registrable domain** (eTLD+1), _not_ the full hostname and _not_ the port.
 
 - `myapp.vercel.app` + `myapp.railway.app` → **different sites** → cookie is NOT sent on API calls (auth silently breaks).
-- `app.<root-domain>` + `api.<root-domain>` → **same site** (shared `<root-domain>`) → cookie IS sent. ✅
+- `app.ourrecipeapp.com` + `api.ourrecipeapp.com` → **same site** (shared `ourrecipeapp.com`) → cookie IS sent. ✅
 
 The cookie is issued by the backend scoped to the parent domain:
 
 ```
-Set-Cookie: token=<JWT>; HttpOnly; Secure; SameSite=Lax; Domain=.<root-domain>; Path=/; Max-Age=86400
+Set-Cookie: token=<JWT>; HttpOnly; Secure; SameSite=Lax; Domain=.ourrecipeapp.com; Path=/; Max-Age=86400
 ```
 
-`Domain=.<root-domain>` makes the cookie valid for all subdomains, so both `app.` and `api.` share it.
+`Domain=.ourrecipeapp.com` makes the cookie valid for all subdomains, so both `app.` and `api.` share it.
 
 ### CORS Requirement
 
@@ -63,7 +63,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://app.<root-domain>"],  # exact origin, NOT "*"
+    allow_origins=["https://app.ourrecipeapp.com"],  # exact origin, NOT "*"
     allow_credentials=True,                        # required to send cookies
     allow_methods=["*"],
     allow_headers=["*"],
@@ -132,15 +132,15 @@ Unit
 
 ### Quantity Dropdown Options (Frontend)
 
-| Number | Options |
-|--------|---------|
-| 1 | 1, 1 1/4, 1 1/3, 1 1/2, 1 2/3, 1 3/4 |
-| 2 | 2, 2 1/4, 2 1/3, 2 1/2, 2 2/3, 2 3/4 |
-| 3 | 3, 3 1/4, 3 1/3, 3 1/2, 3 2/3, 3 3/4 |
-| 4 | 4, 4 1/2 |
-| 5 | 5, 5 1/2 |
-| Text | to taste, as needed, a dash |
-| Custom | free text input |
+| Number | Options                              |
+| ------ | ------------------------------------ |
+| 1      | 1, 1 1/4, 1 1/3, 1 1/2, 1 2/3, 1 3/4 |
+| 2      | 2, 2 1/4, 2 1/3, 2 1/2, 2 2/3, 2 3/4 |
+| 3      | 3, 3 1/4, 3 1/3, 3 1/2, 3 2/3, 3 3/4 |
+| 4      | 4, 4 1/2                             |
+| 5      | 5, 5 1/2                             |
+| Text   | to taste, as needed, a dash          |
+| Custom | free text input                      |
 
 ### Ingredient Name Decision
 
@@ -148,18 +148,18 @@ Unit
 
 **Post-MVP:** A shared `IngredientCatalog` table with unique names. `RecipeIngredients` will reference catalog entries via `catalog_ingredient_id` (nullable FK already in schema).
 
-| Aspect | MVP (free-text) | Post-MVP (normalized) |
-|--------|-----------------|----------------------|
-| Build time | approx less than 1/2 hour | a few hours + migration |
-| Consistency | User-dependent | Canonical names enforced |
-| "Recipes with flour" query | `ILIKE '%flour%'` | Direct FK lookup |
-| Migration path | N/A | Create catalog, migrate names, add FK |
+| Aspect                     | MVP (free-text)           | Post-MVP (normalized)                 |
+| -------------------------- | ------------------------- | ------------------------------------- |
+| Build time                 | approx less than 1/2 hour | a few hours + migration               |
+| Consistency                | User-dependent            | Canonical names enforced              |
+| "Recipes with flour" query | `ILIKE '%flour%'`         | Direct FK lookup                      |
+| Migration path             | N/A                       | Create catalog, migrate names, add FK |
 
 ---
 
 ## 4. API Endpoints
 
-> **Base URL:** `https://api.<root-domain>` in production, `http://localhost:8000` in development.
+> **Base URL:** `https://api.ourrecipeapp.com` in production, `http://localhost:8000` in development.
 
 ### Auth Endpoints
 
@@ -175,13 +175,13 @@ Request:
 }
 
 Response (201):
-{ 
+{
   "id": 1,
   "username": "thechef",
   "email": "james@example.com",
   "display_name": "James da Chef"
 }
-// Set-Cookie: token=<JWT>; HttpOnly; Secure; SameSite=Lax; Domain=.<root-domain>; Path=/; Max-Age=86400
+// Set-Cookie: token=<JWT>; HttpOnly; Secure; SameSite=Lax; Domain=.ourrecipeapp.com; Path=/; Max-Age=86400
 ```
 
 Errors: 409 (username/email exists), 422 (validation).
@@ -205,7 +205,7 @@ Response (200):
   "display_name": "James da Chef",
   "avatar_url": "https://res.cloudinary.com/..."
 }
-// Set-Cookie: token=<JWT>; HttpOnly; Secure; SameSite=Lax; Domain=.<root-domain>; Path=/; Max-Age=86400
+// Set-Cookie: token=<JWT>; HttpOnly; Secure; SameSite=Lax; Domain=.ourrecipeapp.com; Path=/; Max-Age=86400
 ```
 
 Errors: 401 (invalid credentials).
@@ -217,7 +217,7 @@ Errors: 401 (invalid credentials).
 ```
 Response (200):
 { "message": "Logged out" }
-// Set-Cookie: token=; HttpOnly; Secure; SameSite=Lax; Domain=.<root-domain>; Path=/; Max-Age=0
+// Set-Cookie: token=; HttpOnly; Secure; SameSite=Lax; Domain=.ourrecipeapp.com; Path=/; Max-Age=0
 ```
 
 ---
@@ -230,7 +230,7 @@ Response (200):
   "id": 1,
   "username": "thechef",
   "email": "james@example.com",
-  "display_name": "James da Chef", 
+  "display_name": "James da Chef",
   "about": "Warms up a jar of spaghetti sauce like no one's business! Magnifique!",
   "avatar_url": "https://res.cloudinary.com/not-great-image.jpg"
 }
@@ -307,8 +307,8 @@ Response (200):
       "servings": 12,
       "tags": "dessert, cookies",
       "is_private": false,
-      "user": 
-      { 
+      "user":
+      {
         "id": 1,
         "username": "thechef",
         "display_name": "James da Chef",
@@ -345,7 +345,7 @@ Response (200):
   "notes": "Best served warm",
   "tags": "dessert, cookies",
   "is_private": false,
-  "user": 
+  "user":
   {
     "id": 1,
     "username": "thechef",
@@ -358,7 +358,7 @@ Response (200):
       "name": "Flour",
       "quantity": 2.5,
       "quantity_text": "2 1/2",
-      "unit": 
+      "unit":
       {
         "id": 1,
         "name": "cup",
@@ -372,8 +372,8 @@ Response (200):
       "name": "Sugar",
       "quantity": 1.0,
       "quantity_text": "1",
-      "unit": 
-      { 
+      "unit":
+      {
         "id": 1,
         "name": "cup",
         "abbreviation": "c"
@@ -418,7 +418,7 @@ Request:
   "tags": "dessert, cookies",
   "is_private": false,
   "ingredients": [
-    { 
+    {
       "name": "Flour",
       "quantity": 2.5,
       "quantity_text": "2 1/2",
@@ -436,7 +436,7 @@ Request:
     }
   ],
   "preparation_steps": [
-    { 
+    {
       "step_number": 1,
       "instructions": "Preheat oven to 350F"
     },
@@ -466,15 +466,15 @@ Response (200): { "message": "Recipe updated" }
 ```
 
 > **Contract:** `PUT /recipes/{id}` This will replace all ingredients and cooking instructions for the recipe. Importantly, it will also update any recipe fields.
-The backend runs `DELETE` on existing rows for both child tables and re-inserts whatever the request contains, all inside a single transaction. 
-**The frontend must hold the current state in client state and send the full ingredient + step arrays on every save** 
-Any ingredient or step not in the payload is deleted server-side. 
-The trade-off is it's simple and fast to implement, as well as predictable. A Drawback is a stale client tab can wipe unrelated changes if the user submits from it.
+> The backend runs `DELETE` on existing rows for both child tables and re-inserts whatever the request contains, all inside a single transaction.
+> **The frontend must hold the current state in client state and send the full ingredient + step arrays on every save**
+> Any ingredient or step not in the payload is deleted server-side.
+> The trade-off is it's simple and fast to implement, as well as predictable. A Drawback is a stale client tab can wipe unrelated changes if the user submits from it.
 
 Errors: 401, 403 (not owner), 404 (not found).
 
-> **Post-MVP, replace the full-replace with a smart merge:** Replace the "delete-then-insert" with a "diff-against-database" that accepts either with the current behavior, using a full-state payload (for backward compatibility), or an `operations` array (`{op: "update"|"delete"|"create", ...}`). 
-Existing clients will continue to work as-is, or be modified with the new changes to work similar to new clients by sending smaller, safer payloads.
+> **Post-MVP, replace the full-replace with a smart merge:** Replace the "delete-then-insert" with a "diff-against-database" that accepts either with the current behavior, using a full-state payload (for backward compatibility), or an `operations` array (`{op: "update"|"delete"|"create", ...}`).
+> Existing clients will continue to work as-is, or be modified with the new changes to work similar to new clients by sending smaller, safer payloads.
 
 ---
 
@@ -496,29 +496,31 @@ Response: Same shape as GET /recipes, filtered by user_id
 ```
 
 Access rules:
-- **Self-access and Public access** (user `{id}` matches the authenticated user): 
-returns all of that user's non-deleted recipes, including private ones, as well as all public recipes in the system.
+
+- **Self-access and Public access** (user `{id}` matches the authenticated user):
+  returns all of that user's non-deleted recipes, including private ones, as well as all public recipes in the system.
 - **Public access** (no auth): returns only public (`is_private = false`) recipes.
 - **Post-MVP access** allow one user's private recipes to be shared with other specific users.
+
 ---
 
 ### Endpoint Summary
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| POST | /auth/register | No | Create account + auto-login |
-| POST | /auth/login | No | Login, set JWT cookie |
-| POST | /auth/logout | No | Clear JWT cookie |
-| GET | /auth/user | Yes | Get current user profile |
-| PUT | /auth/user | Yes | Update name, bio, avatar |
-| PUT | /auth/email | Yes | Update email (requires password) |
-| PUT | /auth/password | Yes | Update password (requires current) |
-| GET | /recipes | No | List recipes (paginated, searchable) |
-| GET | /recipes/{id} | No | Get recipe detail with ingredients + steps |
-| POST | /recipes | Yes | Create recipe |
-| PUT | /recipes/{id} | Yes (owner) | Update recipe |
-| DELETE | /recipes/{id} | Yes (owner) | Soft-delete recipe |
-| GET | /users/{id}/recipes | No | List recipes by user |
+| Method | Path                | Auth        | Description                                |
+| ------ | ------------------- | ----------- | ------------------------------------------ |
+| POST   | /auth/register      | No          | Create account + auto-login                |
+| POST   | /auth/login         | No          | Login, set JWT cookie                      |
+| POST   | /auth/logout        | No          | Clear JWT cookie                           |
+| GET    | /auth/user          | Yes         | Get current user profile                   |
+| PUT    | /auth/user          | Yes         | Update name, bio, avatar                   |
+| PUT    | /auth/email         | Yes         | Update email (requires password)           |
+| PUT    | /auth/password      | Yes         | Update password (requires current)         |
+| GET    | /recipes            | No          | List recipes (paginated, searchable)       |
+| GET    | /recipes/{id}       | No          | Get recipe detail with ingredients + steps |
+| POST   | /recipes            | Yes         | Create recipe                              |
+| PUT    | /recipes/{id}       | Yes (owner) | Update recipe                              |
+| DELETE | /recipes/{id}       | Yes (owner) | Soft-delete recipe                         |
+| GET    | /users/{id}/recipes | No          | List recipes by user                       |
 
 ---
 
@@ -528,12 +530,12 @@ FastAPI auto-publishes an **OpenAPI 3** schema at `/openapi.json` on the live ba
 
 **Workflow:**
 
-| Step | Where | What |
-|------|------|------|
-| Backend serves `/openapi.json` | `http://localhost:8000/openapi.json` (dev), `https://api.<root-domain>/openapi.json` (prod) | Source of truth for the API contract |
-| Generator runs in frontend | `frontend/openapi.json` (saved) | Snapshot fetched from the live backend |
-| Spec transformed to TS | `pnpm run codegen` → `frontend/types/api.d.ts` | Generated types + client functions |
-| Frontend imports the client | any `.ts/.tsx` | `import { listRecipes } from "~/types/api"` (or wherever codegen emits) |
+| Step                           | Where                                                                                          | What                                                                    |
+| ------------------------------ | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Backend serves `/openapi.json` | `http://localhost:8000/openapi.json` (dev), `https://api.ourrecipeapp.com/openapi.json` (prod) | Source of truth for the API contract                                    |
+| Generator runs in frontend     | `frontend/openapi.json` (saved)                                                                | Snapshot fetched from the live backend                                  |
+| Spec transformed to TS         | `pnpm run codegen` → `frontend/types/api.d.ts`                                                 | Generated types + client functions                                      |
+| Frontend imports the client    | any `.ts/.tsx`                                                                                 | `import { listRecipes } from "~/types/api"` (or wherever codegen emits) |
 
 **Tooling:** [`openapi-typescript`](https://openapi-ts.dev/) for types plus [`openapi-fetch`](https://openapi-ts.dev/openapi-fetch/) for the runtime client gives fully-typed functions like `listRecipes({ query: { q: "cookies", page: 1, limit: 20 }, credentials: "include" })` with no manual DTOs to maintain.
 
@@ -551,21 +553,21 @@ FastAPI auto-publishes an **OpenAPI 3** schema at `/openapi.json` on the live ba
 
 **Decision: Single JWT with 24-hour expiry.** No refresh tokens for MVP.
 
-| Approach | Chosen? | Rationale |
-|----------|---------|-----------|
-| Single JWT (24h) | **MVP** | Simpler to implement. No `/auth/refresh` endpoint. No refresh token DB storage. |
-| Refresh tokens | Post-MVP | Adds ~2 days of work for no meaningful benefit in a demo context. |
+| Approach         | Chosen?  | Rationale                                                                       |
+| ---------------- | -------- | ------------------------------------------------------------------------------- |
+| Single JWT (24h) | **MVP**  | Simpler to implement. No `/auth/refresh` endpoint. No refresh token DB storage. |
+| Refresh tokens   | Post-MVP | Adds ~2 days of work for no meaningful benefit in a demo context.               |
 
 ### Cookie Configuration
 
-| Attribute | Value | Purpose |
-|-----------|-------|---------|
-| `HttpOnly` | yes | JS cannot read the token (XSS protection) |
-| `Secure` | yes | HTTPS only |
-| `SameSite` | `Lax` | Works across subdomains of one registrable domain |
-| `Domain` | `.<root-domain>` | Shared between `app.` and `api.` subdomains |
-| `Path` | `/` | Sent for all routes |
-| `Max-Age` | `86400` | 24-hour expiry |
+| Attribute  | Value               | Purpose                                           |
+| ---------- | ------------------- | ------------------------------------------------- |
+| `HttpOnly` | yes                 | JS cannot read the token (XSS protection)         |
+| `Secure`   | yes                 | HTTPS only                                        |
+| `SameSite` | `Lax`               | Works across subdomains of one registrable domain |
+| `Domain`   | `.ourrecipeapp.com` | Shared between `app.` and `api.` subdomains       |
+| `Path`     | `/`                 | Sent for all routes                               |
+| `Max-Age`  | `86400`             | 24-hour expiry                                    |
 
 > **Local dev:** On `localhost`, omit `Domain` and `Secure` (browsers reject `Secure` cookies on `http://localhost` in some cases; and `localhost` cannot have a `Domain` attribute set to a real domain). Use environment-based cookie settings: `Secure` + `Domain` in production, neither locally.
 
@@ -574,6 +576,7 @@ FastAPI auto-publishes an **OpenAPI 3** schema at `/openapi.json` on the live ba
 **Decision: Check `GET /auth/user` on app load + store result in Zustand.**
 
 Flow:
+
 1. App loads -> calls `GET /auth/user` (with `credentials: "include"`)
 2. If 200 -> user is logged in. Store user data in Zustand store.
 3. If 401 -> user is logged out. Show login/register links.
@@ -583,17 +586,17 @@ Flow:
 
 ### Redirect Behavior
 
-| Scenario | Behavior |
-|----------|----------|
-| Login success | Redirect to `/` (home) |
-| Register success | Auto-login + redirect to `/` |
-| Logout | Clear cookie + redirect to `/` |
+| Scenario                       | Behavior                                           |
+| ------------------------------ | -------------------------------------------------- |
+| Login success                  | Redirect to `/` (home)                             |
+| Register success               | Auto-login + redirect to `/`                       |
+| Logout                         | Clear cookie + redirect to `/`                     |
 | Protected page (not logged in) | Redirect to `/auth/login?redirect=/recipes/create` |
-| Login with redirect param | Redirect to original page |
+| Login with redirect param      | Redirect to original page                          |
 
 ### Rate Limiting (Post-MVP)
 
-**Decision: Rate limiting is *post-MVP*.** Not in MVP scope. Will be added with `slowapi` (or equivalent) on `/auth/login`, `/auth/register`, and `/auth/password`, with a starting limit of `5/minute` per IP for login/register. Tracked separately because it adds middleware, tests, and a new config knob for negligible demo value before launch.
+**Decision: Rate limiting is _post-MVP_.** Not in MVP scope. Will be added with `slowapi` (or equivalent) on `/auth/login`, `/auth/register`, and `/auth/password`, with a starting limit of `5/minute` per IP for login/register. Tracked separately because it adds middleware, tests, and a new config knob for negligible demo value before launch.
 
 ### JWT Signing
 
@@ -630,6 +633,7 @@ app/
 ```
 
 > **Next.js routing notes:**
+>
 > - `[id]` is a dynamic segment (access via `useParams()` in Client Components or `params` prop in Server Components).
 > - Protect routes using Next.js middleware (`middleware.ts` at project root) or by checking auth state in Server Components and redirecting with `redirect()` from `next/navigation`.
 > - Server Components are the default. Use `'use client'` directive at the top of files that need React hooks, event handlers, or browser APIs.
@@ -639,6 +643,7 @@ app/
 **Login:** Dedicated page (not modal). Clean URLs, simpler SSR handling, straightforward redirect flow. Register is also a dedicated page with cross-links.
 
 **Profile settings:** Everything unified under `/auth/profile`, organized in sections:
+
 - Profile picture + display name + bio
 - Account settings (email, password) — inline expandable forms
 - My Recipes list
@@ -653,13 +658,13 @@ The `Recipe` table includes an `is_private` boolean (default false). Standard in
 
 ### Access Rules
 
-| Scenario | Behavior |
-|----------|----------|
-| Anyone (no auth) views recipe | Can see public recipes only |
-| Anyone (no auth) views recipe list | Sees only public recipes |
-| Owner views own recipe | Can see regardless of `is_private` |
-| Owner views recipe list | Sees all own recipes + all public recipes from others |
-| Owner edits recipe | Can toggle `is_private` on own recipes |
+| Scenario                           | Behavior                                              |
+| ---------------------------------- | ----------------------------------------------------- |
+| Anyone (no auth) views recipe      | Can see public recipes only                           |
+| Anyone (no auth) views recipe list | Sees only public recipes                              |
+| Owner views own recipe             | Can see regardless of `is_private`                    |
+| Owner views recipe list            | Sees all own recipes + all public recipes from others |
+| Owner edits recipe                 | Can toggle `is_private` on own recipes                |
 
 ### Private Recipe UI Marking
 
@@ -696,10 +701,10 @@ The owner's private recipes appear mixed in with public results on the recipe li
 
 ### Sidebar Items by Auth State
 
-| Auth State | Items | Heroicons |
-|------------|-------|-----------|
-| Logged out | Search, Home, Login, Register | MagnifyingGlassIcon, HomeIcon, UserIcon, PencilSquareIcon |
-| Logged in | Search, Home, Profile, New Recipe, Logout | MagnifyingGlassIcon, HomeIcon, UserCircleIcon, PlusCircleIcon, ArrowLeftOnRectangleIcon |
+| Auth State | Items                                     | Heroicons                                                                               |
+| ---------- | ----------------------------------------- | --------------------------------------------------------------------------------------- |
+| Logged out | Search, Home, Login, Register             | MagnifyingGlassIcon, HomeIcon, UserIcon, PencilSquareIcon                               |
+| Logged in  | Search, Home, Profile, New Recipe, Logout | MagnifyingGlassIcon, HomeIcon, UserCircleIcon, PlusCircleIcon, ArrowLeftOnRectangleIcon |
 
 > **Heroicons in React:** Use the `@heroicons/react` package (`pnpm add @heroicons/react`). Import icons as React components, e.g. `import { HomeIcon } from "@heroicons/react/24/outline"`.
 
@@ -729,6 +734,7 @@ Dynamic list with add/remove buttons using React state (`useState`):
 ### Shopping List (Post-MVP, UI Only)
 
 No backend changes needed. Derived from the `RecipeIngredients` table:
+
 - Full recipe print: CSS `@media print` stylesheet on the recipe detail page
 - Shopping list: Filter to display only name + quantity_text + unit, rendered in a compact print-friendly layout
 
@@ -747,7 +753,7 @@ No backend changes needed. Derived from the `RecipeIngredients` table:
 ### Authentication Flow
 
 1. User submits login form -> `POST /auth/login` with username + password
-2. Backend validates credentials -> generates signed JWT -> returns `Set-Cookie` (HttpOnly, Secure, SameSite=Lax, `Domain=.<root-domain>`, 24h)
+2. Backend validates credentials -> generates signed JWT -> returns `Set-Cookie` (HttpOnly, Secure, SameSite=Lax, `Domain=.ourrecipeapp.com`, 24h)
 3. On next load, frontend calls `GET /auth/user` (cookie sent automatically client-side; read via `cookies()` in Server Components) -> if 200, store user in Zustand; if 401, show logged-out UI
 4. On logout -> `POST /auth/logout` -> backend clears cookie -> frontend redirects to home
 
@@ -758,6 +764,7 @@ No backend changes needed. Derived from the `RecipeIngredients` table:
 Next.js uses its own build system (Turbopack), not Vite. Tailwind CSS v4 integrates via the PostCSS plugin.
 
 **1. Initialize the project with pnpm via corepack:**
+
 ```bash
 corepack enable
 corepack prepare pnpm@latest --activate
@@ -765,22 +772,25 @@ pnpm create next-app@latest frontend --typescript --tailwind --eslint
 ```
 
 **2. Install Tailwind CSS v4 PostCSS plugin:**
+
 ```bash
 cd frontend
 pnpm add tailwindcss @tailwindcss/postcss
 ```
 
 **3. Configure PostCSS (`postcss.config.mjs`):**
+
 ```js
 const config = {
   plugins: {
-    '@tailwindcss/postcss': {},
+    "@tailwindcss/postcss": {},
   },
 };
 export default config;
 ```
 
 **4. Import Tailwind in `app/globals.css`:**
+
 ```css
 @import "tailwindcss";
 
@@ -791,6 +801,7 @@ export default config;
 ```
 
 **Key differences from Tailwind v3 (worth knowing):**
+
 - No `tailwind.config.js` required — configuration is CSS-first via `@theme` and CSS variables.
 - Content detection is automatic (no `content: [...]` globs to maintain).
 - A single `@import "tailwindcss";` replaces the old `@tailwind base; @tailwind components; @tailwind utilities;` trio.
@@ -798,6 +809,7 @@ export default config;
 ### Package Manager Setup
 
 **pnpm via corepack** (not npm or yarn):
+
 ```bash
 corepack enable                    # enable corepack (one-time)
 corepack prepare pnpm@latest --activate   # set pnpm as the default
@@ -813,6 +825,7 @@ Commit `pnpm-lock.yaml` after every dependency change.
 Next.js 16, React 19, Zustand, FastAPI, async SQLAlchemy, Alembic, and the Docker surface area in this project each have a few conventions or gotchas that are easy to miss on first contact — independent of any developer's prior background. This section flags the ones most likely to surprise readers coming from non-Next.js React, non-async Python, or non-Postgres relational databases.
 
 ### Next.js 16 + React 19
+
 - **App Router:** `app/` directory defines routes via file structure. `page.tsx` = route, `layout.tsx` = shared wrapper, `loading.tsx` = loading UI, `error.tsx` = error boundary.
 - **Server Components are the default:** Components are Server Components unless marked with `'use client'` at the top. Server Components can `await` data directly. Client Components are needed for hooks (`useState`, `useEffect`), event handlers, and browser APIs.
 - **Data fetching:** In Server Components, use native `fetch()` (extended by Next.js for caching/revalidation). In Client Components, use `fetch()` with React's `use` hook or a data-fetching library. Authed calls must set `credentials: "include"`.
@@ -822,11 +835,13 @@ Next.js 16, React 19, Zustand, FastAPI, async SQLAlchemy, Alembic, and the Docke
 - **No auto-imports:** Unlike Nuxt, React/Next.js requires explicit imports for everything — components, hooks, utilities.
 
 ### Zustand
+
 - **Store creation:** `const useStore = create((set) => ({ ... }))` — no providers, no reducers, no actions boilerplate.
 - **SSR hydration:** For SSR apps, initialize stores with server-fetched data to avoid hydration mismatches. A common pattern is to pass initial state from Server Components to Client Components via props.
 - **Selectors:** Use `useStore((state) => state.user)` to subscribe to specific slices and avoid unnecessary re-renders.
 
 ### FastAPI Conventions
+
 - **Async everywhere:** Endpoints are `async def`. The async SQLAlchemy session and the `asyncpg` driver are first-party; mixing sync code in the request path blocks the event loop.
 - **Pydantic v2 models:** Request/response validation through Pydantic schemas — analogous to typed DTOs. Keep separate schemas for input vs output so internal-only fields can't leak back to clients.
 - **Dependency injection:** `Depends(...)` provides the DB session and the current user (decoded from the JWT cookie) to endpoints; no global request context.
@@ -834,6 +849,7 @@ Next.js 16, React 19, Zustand, FastAPI, async SQLAlchemy, Alembic, and the Docke
 - **Migrations:** Alembic for migrations; autogenerate from SQLAlchemy models and review the diff before committing.
 
 ### PostgreSQL
+
 - **Identity columns:** `BIGINT GENERATED ALWAYS AS IDENTITY` (or `SERIAL`).
 - **Types:** real `boolean`, `text` (no length penalty vs `varchar`), `timestamptz` for timestamps, `numeric(8,3)` for quantities (allows up to 99999.999; the MVP quantity dropdown caps at 5/8 so this is comfortably over-provisioned).
 - **Search:** `ILIKE` for case-insensitive matching (used by `GET /recipes?q=`).
@@ -841,8 +857,31 @@ Next.js 16, React 19, Zustand, FastAPI, async SQLAlchemy, Alembic, and the Docke
 - **No `GO` batch separators, no `BEGIN TRAN` boilerplates:** transactions are explicit and methods-based (`async with session.begin(): ...`).
 
 ### Docker Scope
+
 - **Scope for MVP is small:** Docker runs only PostgreSQL locally via `docker-compose.yml` (a `postgres` service for dev and a `postgres-test` service for tests). The application itself is not containerized for MVP.
 - **Commands in practice:** `docker compose up -d`, `docker compose down`, `docker compose logs postgres`. That covers the runtime surface area needed for local development.
 - **Railway does not require a custom Dockerfile:** it builds the backend with Nixpacks. Use a `Procfile` (or `railway.json`) to declare the start command — see §1 and the Procfile discussion in earlier planning.
+
+### Python runtime dependencies (Poetry-managed)
+
+Added in a single `poetry add` call from `backend/`:
+
+| Package spec          | Purpose                                                     | Extras pulled                                                                                      |
+| --------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `fastapi[standard]`   | Web framework                                               | `httpx`, `jinja2`, `python-multipart`, `uvicorn` (informational — uvicorn still listed explicitly) |
+| `uvicorn[standard]`   | ASGI server (`poetry run uvicorn ...`)                      | `uvloop`, `httptools`, `watchfiles`, `websockets`, `PyYAML`, `typing-extensions`, `colorama`       |
+| `pydantic[email]`     | Data validation                                             | `email-validator`                                                                                  |
+| `pydantic-settings`   | Env-driven `Settings(BaseSettings)` for `app/config.py`     | none                                                                                               |
+| `sqlalchemy[asyncio]` | 2.x async ORM                                               | `greenlet` (SQLAlchemy async internals)                                                            |
+| `asyncpg`             | Async Postgres driver (`create_async_engine(DATABASE_URL)`) | none                                                                                               |
+| `alembic`             | Migrations (used in Step 3)                                 | none                                                                                               |
+| `pyjwt`               | JWT sign/verify (HS256)                                     | none — HS256 doesn't need `[crypto]` extras                                                        |
+| `passlib[bcrypt]`     | Password hashing framework                                  | `bcrypt` (the actual C-extension hasher)                                                           |
+| `python-multipart`    | Multipart form parser (`fastapi.Form(...)` deps)            | none — already a transitive of `fastapi[standard]`; listed explicitly is fine                      |
+| `loguru`              | Logging (JSON to stdout, captured by Railway)               | none                                                                                               |
+
+ℹ️ Note for editors: no version constraints are set; Poetry resolves latest compatible with >=3.14 under the project's requires-python.
+
+ℹ️ Shell gotcha: running this with zsh requires each bracketed spec to be quoted or run via noglob poetry add ... — zsh otherwise treats [standard] as a glob and aborts before Poetry runs.
 
 ---

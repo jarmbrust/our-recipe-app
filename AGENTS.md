@@ -47,7 +47,7 @@ docker compose down                               # stop
 ## Architecture Facts
 
 - **Monorepo**: `backend/` (FastAPI) + `frontend/` (Next.js 16)
-- **Domain setup**: `app.<domain>` (Vercel) + `api.<domain>` (Railway) share one registrable domain for HttpOnly JWT cookies
+- **Domain setup**: `app.ourrecipeapp.com` (Vercel) + `api.ourrecipeapp.com` (Railway) share one registrable domain for HttpOnly JWT cookies
 - **Auth**: JWT in HttpOnly cookie, 24h expiry, HS256. No refresh tokens for MVP
 - **PUT /recipes/{id}** does full replace of ingredients/steps — frontend must send complete arrays on every save
 - **Soft deletes** on recipes (`is_deleted` flag)
