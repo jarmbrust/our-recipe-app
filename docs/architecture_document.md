@@ -2,7 +2,7 @@
 
 **Version:** 1.0 (MVP)
 **Date:** July 20, 2026
-**Status:** Active MVP architecture document. Archived Nuxt/Vue version in `architecture_document_archived.md`.
+**Status:** Active MVP architecture document.
 
 ---
 
@@ -533,7 +533,7 @@ FastAPI auto-publishes an **OpenAPI 3** schema at `/openapi.json` on the live ba
 | Step                           | Where                                                                                          | What                                                                    |
 | ------------------------------ | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
 | Backend serves `/openapi.json` | `http://localhost:8000/openapi.json` (dev), `https://api.ourrecipeapp.com/openapi.json` (prod) | Source of truth for the API contract                                    |
-| Generator runs in frontend     | `frontend/openapi.json` (saved)                                                                | Snapshot fetched from the live backend                                  |
+| Generator runs in frontend     | `frontend/openapi.json` (saved to disk only; gitignored)                                                                | Snapshot fetched from the live backend                                  |
 | Spec transformed to TS         | `pnpm run codegen` → `frontend/types/api.d.ts`                                                 | Generated types + client functions                                      |
 | Frontend imports the client    | any `.ts/.tsx`                                                                                 | `import { listRecipes } from "~/types/api"` (or wherever codegen emits) |
 
@@ -594,6 +594,10 @@ Flow:
 | Protected page (not logged in) | Redirect to `/auth/login?redirect=/recipes/create` |
 | Login with redirect param      | Redirect to original page                          |
 
+### Open-redirect guardrail
+
+The `redirect` query parameter MUST start with `/`, MUST NOT start with `//` (rejects protocol-relative URLs), MUST NOT contain `:` before the first `/`. Internal allowlist only. Implementation lives in `frontend/middleware.ts` (Step 9).
+
 ### Rate Limiting (Post-MVP)
 
 **Decision: Rate limiting is _post-MVP_.** Not in MVP scope. Will be added with `slowapi` (or equivalent) on `/auth/login`, `/auth/register`, and `/auth/password`, with a starting limit of `5/minute` per IP for login/register. Tracked separately because it adds middleware, tests, and a new config knob for negligible demo value before launch.
@@ -604,7 +608,7 @@ JWTs use **HS256** with a shared `JWT_SECRET` env var on the backend. Generate t
 
 ### Logging (MVP)
 
-Backend logs to `stdout` in JSON format via a `loguru` JSON sink; Railway captures `stdout` automatically and exposes a log viewer in the dashboard — no separate log aggregator is in MVP scope. The frontend relies on Sentry for browser-side errors; routine console output is not persisted. POST/GET/PUT/DELETE request lines are logged at info level; exceptions are logged at error level and (where configured) forwarded to Sentry.
+Backend logs to `stdout` in JSON format via a `loguru` JSON sink; Railway captures `stdout` automatically and exposes a log viewer in the dashboard — no separate log aggregator is in MVP scope. The frontend relies on Sentry for browser-side errors; routine console output is not persisted. POST/GET/PUT/DELETE request lines are logged at info level; exceptions are logged at error level. Browser-side errors are forwarded to Sentry; backend Sentry forwarding is opt-in (not in MVP scope).
 
 ---
 
