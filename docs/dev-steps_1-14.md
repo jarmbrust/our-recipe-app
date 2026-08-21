@@ -63,6 +63,24 @@
    - `passlib[bcrypt]`
    - `python-multipart`
    - `loguru`
+
+   ```BASH
+   # NOTE: for zsh, you need to add single quotes for the dependences with brackets in the call (such as  'fastapi[standard]')
+
+   poetry add \
+     fastapi[standard] \
+     uvicorn[standard] \
+     pydantic[email] \
+     pydantic-settings \
+     sqlalchemy[asyncio] \
+     asyncpg \
+     alembic \
+     pyjwt \
+     passlib[bcrypt] \
+     python-multipart \
+     loguru
+   ```
+
 3. Dev deps: `pytest`, `pytest-asyncio`, `httpx`, `ruff`, `mypy`, `freezegun`.
 4. Layout:
 
@@ -153,7 +171,7 @@
    - `GET /auth/user` — `Depends(get_current_user)`.
    - `PUT /auth/user`, `PUT /auth/email`, `PUT /auth/password` — stub with `{message: "..."}` so the contract exists; full behavior can be body-filling work.
 5. `app/services/cookies.py`: build the `Set-Cookie` value per env.
-   - `ENV=dev`: no `Domain`, no `Secure`.
+   - `ENV=dev`: no `Domain`, no `Secure`. `SameSite=Lax`, `HttpOnly`, `Path=/` always set.
    - `ENV=prod`: `Domain=.ourrecipeapp.com; Secure; SameSite=Lax; HttpOnly; Path=/; Max-Age=86400`.
 6. Tests in `backend/tests/test_auth.py` using `httpx.AsyncClient(app=app, base_url="http://test")`:
    - Register success → 201, `Set-Cookie` present, attributes correct for env.
@@ -165,7 +183,7 @@
    - Logout clears cookie.
 7. `poetry run pytest tests/test_auth.py -v`. Then full check: `ruff check . && ruff format --check . && mypy . && pytest`.
 
-**Verification:** end-to-end register → login → `/auth/user` → logout, all pass with cookies.
+**Verification:** end-to-end register → login → `/auth/user` → logout, all pass with cookies. Note: `PUT /auth/email` and `PUT /auth/password` are accepted by the contract but stubbed in Step 4; full behavior split off as a Step 14 follow-up.
 
 ---
 
@@ -225,7 +243,7 @@ Wire `pnpm run codegen` to fetch backend `/openapi.json` → write `frontend/ope
 
 ## Step 9 — Auth UI
 
-`/auth/login` and `/auth/register` as Server Components rendering Client form components. `useAuthStore` (Zustand) holds `{ user: UserOut | null, initialized: boolean }`. Root layout calls `GET /auth/user` server-side via `lib/serverApi.ts` once and seeds the store via a `StoreHydration` client component (`AGENTS.md` Zustand SSR-hydration gotcha). `middleware.ts` matcher for `/recipes/create` and `/auth/profile` redirects to `/auth/login?redirect=...` when no `token` cookie present.
+`/auth/login` and `/auth/register` as Server Components rendering Client form components. `useAuthStore` (Zustand) holds `{ user: UserOut | null, initialized: boolean }`. Root layout calls `GET /auth/user` server-side via `lib/serverApi.ts` once and seeds the store via a `StoreHydration` client component (`AGENTS.md` Zustand SSR-hydration gotcha). `middleware.ts` matcher for `/recipes/create` and `/auth/profile` redirects to `/auth/login?redirect=...` when no `token` cookie present. Validate the `redirect` query parameter (must start with `/`, must not start with `//`, must not contain `:` before the first `/`); otherwise redirect to `/`.
 
 ## Step 10 — Recipe frontend
 
@@ -262,3 +280,5 @@ Document deferred items in `README.md` so they're visible:
 - Recipe-print / shopping list (CSS-only)
 - Private recipe sharing one-to-one
 - Recipe-PUT smart-merge mode alongside full-replace (backward-compatible shape)
+- JWT signing-key rotation every 6 months (per architecture §5)
+- Backend Sentry opt-in (sentry-sdk init in `app/main.py`) if needed before launch

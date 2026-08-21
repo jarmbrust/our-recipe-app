@@ -2,13 +2,13 @@
 
 ## Project State
 
-Planning phase. `backend/` and `frontend/` are empty. All current context lives in `docs/architecture_document.md` — read it before coding.
+Always read `docs/architecture_document.md` before coding. Local working tree may be ahead of the document — verify Step status in `docs/dev-steps_1-14.md` before assuming `backend/` or `frontend/` is empty.
 
 ## Stack
 
 | Layer | Tech |
 |-------|------|
-| Frontend | Next.js 16 (App Router) + React 19 + Tailwind CSS v4 (PostCSS) + Zustand |
+| Frontend                   | Next.js 16 (App Router) + React 19 + Tailwind CSS v4 (PostCSS) + Zustand + Prettier (format) |
 | Backend | FastAPI (Python) + Poetry + async SQLAlchemy + Alembic |
 | Database | PostgreSQL 16 (Docker locally, Neon in prod) |
 | Images | Cloudinary (unsigned uploads) |
@@ -36,6 +36,7 @@ pnpm install
 pnpm dev                                          # dev server
 pnpm run codegen                                  # regenerate API types from /openapi.json
 pnpm run lint                                     # lint
+pnpm run format                                   # format (Prettier)
 ```
 
 ### Infrastructure
