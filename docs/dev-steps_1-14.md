@@ -63,6 +63,24 @@
    - `passlib[bcrypt]`
    - `python-multipart`
    - `loguru`
+
+   ```BASH
+   # NOTE: for zsh, you need to add single quotes for the dependences with brackets in the call (such as  'fastapi[standard]')
+
+   poetry add \
+     fastapi[standard] \
+     uvicorn[standard] \
+     pydantic[email] \
+     pydantic-settings \
+     sqlalchemy[asyncio] \
+     asyncpg \
+     alembic \
+     pyjwt \
+     passlib[bcrypt] \
+     python-multipart \
+     loguru
+   ```
+
 3. Dev deps: `pytest`, `pytest-asyncio`, `httpx`, `ruff`, `mypy`, `freezegun`.
 4. Layout:
 
