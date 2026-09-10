@@ -1,8 +1,16 @@
 # Our Recipe App — Architecture Document
 
-**Version:** 1.0 (MVP)
-**Date:** July 20, 2026
-**Status:** Active MVP architecture document.
+- **Version:** 1.1 (MVP)
+- **Created:** 2026-07-20
+- **Last Updated:** 2026-09-10
+- **Status:** Active
+
+## Revision History
+
+| Version | Date | Notes |
+| ------- | ---- | ----- |
+| 1.1 | 2026-09-10 | Clarified `PUT /recipes/{id}` full-state update semantics and narrowed `GET /users/{id}/recipes` behavior. |
+| 1.0 | 2026-07-20 | Initial MVP architecture document. |
 
 ---
 
@@ -461,20 +469,25 @@ All operations inside a database transaction. Errors: 401 (unauth), 422 (validat
 **PUT /recipes/{id}** — Update recipe (auth required, owner only)
 
 ```
-Request: Same shape as POST /recipes (all fields optional for partial update)
+Request: Same JSON shape as POST /recipes.
+
+For MVP, the frontend should send the full current editable recipe state on every save, including the complete `ingredients` and `preparation_steps` arrays. Scalar recipe fields should also be sent with their current values, even if unchanged.
+
 Response (200): { "message": "Recipe updated" }
 ```
 
-> **Contract:** `PUT /recipes/{id}` This will replace all ingredients and cooking instructions for the recipe. Importantly, it will also update any recipe fields.
-> The backend runs `DELETE` on existing rows for both child tables and re-inserts whatever the request contains, all inside a single transaction.
-> **The frontend must hold the current state in client state and send the full ingredient + step arrays on every save**
-> Any ingredient or step not in the payload is deleted server-side.
-> The trade-off is it's simple and fast to implement, as well as predictable. A Drawback is a stale client tab can wipe unrelated changes if the user submits from it.
+> **Contract:** `PUT /recipes/{id}` performs a full editable recipe update.
+> The backend updates top-level recipe fields and fully replaces the recipe’s ingredient and preparation-step child rows inside a single transaction.
+> Existing rows in both child tables are deleted and fresh rows are inserted from the request payload.
+>
+> **The frontend must load the current recipe into client state and send the full ingredient + step arrays on every save.**
+> Any ingredient or step not included in the payload is deleted server-side.
+>
+> The trade-off is simplicity and predictability for MVP. A stale client tab can still overwrite unrelated ingredient or step changes if the user saves older state.
 
 Errors: 401, 403 (not owner), 404 (not found).
 
-> **Post-MVP, replace the full-replace with a smart merge:** Replace the "delete-then-insert" with a "diff-against-database" that accepts either with the current behavior, using a full-state payload (for backward compatibility), or an `operations` array (`{op: "update"|"delete"|"create", ...}`).
-> Existing clients will continue to work as-is, or be modified with the new changes to work similar to new clients by sending smaller, safer payloads.
+> **Post-MVP:** Add a smarter merge/update mode, likely via `PATCH /recipes/{id}` or an operation-based payload, while keeping the current full-state `PUT` behavior backward-compatible for existing clients.
 
 ---
 
@@ -492,15 +505,19 @@ Errors: 401, 403, 404.
 
 ```
 Query: ?page=1&limit=20
-Response: Same shape as GET /recipes, filtered by user_id
+Response: Same shape as GET /recipes, filtered to recipes owned by user `{id}`
 ```
 
 Access rules:
 
-- **Self-access and Public access** (user `{id}` matches the authenticated user):
-  returns all of that user's non-deleted recipes, including private ones, as well as all public recipes in the system.
-- **Public access** (no auth): returns only public (`is_private = false`) recipes.
-- **Post-MVP access** allow one user's private recipes to be shared with other specific users.
+- **Self-access** (user `{id}` matches the authenticated user): returns all of that user’s non-deleted recipes, including private ones.
+- **Other-user access** (authenticated as someone else): returns only that user’s public (`is_private = false`) non-deleted recipes.
+- **Public access** (no auth): returns only that user’s public (`is_private = false`) non-deleted recipes.
+
+> This endpoint is scoped to recipes owned by the specified user.
+> Broader mixed discovery behavior — such as public recipes across all users plus the current user’s private recipes — belongs on `GET /recipes`, not `GET /users/{id}/recipes`.
+
+- **Post-MVP:** allow one user's private recipes to be shared with other specific users.
 
 ---
 
