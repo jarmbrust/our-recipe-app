@@ -23,6 +23,7 @@ A shareable record of architecture review findings and remaining recommendations
 | 5 | Add a small e2e smoke test later | 📋 Open |
 | 6 | Harden unsigned Cloudinary uploads before public launch | ⚠️ Accepted risk (MVP) |
 | 7 | Prioritize modern patterns over exact versions | 📋 Guiding principle |
+| 8 | Adopt ESLint 10 with a lean custom flat config | ✅ Applied (2026-09-13) |
 
 ---
 
@@ -101,6 +102,32 @@ The specific framework versions matter less than demonstrating understanding of:
 
 - **`PUT /recipes/{id}`** is a full editable recipe update. The frontend sends the complete recipe state, including full `ingredients` and `preparation_steps` arrays, on every save. Omitted child items are deleted server-side.
 - **`GET /users/{id}/recipes`** returns only recipes owned by the specified user: private included for self-access, public only otherwise. Mixed discovery belongs on `GET /recipes`.
+
+---
+
+## Frontend Tooling Decisions
+
+### ESLint 10 migration (2026-09-13)
+
+**Decision:** Run ESLint 10 with a custom flat config instead of ESLint 9 + `eslint-config-next`.
+
+**Why:** The scaffold installed `eslint@9.39.5` (line-level EOL). `eslint-config-next@16.3.5` itself allows ESLint 10, but three of its plugin dependencies do not declare ESLint 10 peer support: `eslint-plugin-react` (7.37.5), `eslint-plugin-jsx-a11y` (6.10.2), `eslint-plugin-import` (2.32.0).
+
+**What changed:**
+- Removed `eslint-config-next`
+- Added direct devDeps: `@next/eslint-plugin-next@16.3.5`, `typescript-eslint@^8.70`, `eslint-plugin-react-hooks@^7.1.1`, `globals@^16`
+- Upgraded `eslint` `^9` → `^10`
+- Rewrote `eslint.config.mjs`: Next core-web-vitals rules + react-hooks recommended + typescript-eslint recommended + browser/node globals
+
+**Known gaps (temporarily dropped rules):**
+- `eslint-plugin-react` recommended set (incl. `react/jsx-key` — React still warns at runtime in dev)
+- `eslint-plugin-jsx-a11y` six warn-level a11y rules
+- `eslint-plugin-import` `no-anonymous-default-export` warn rule
+
+**Re-add checklist** (when any of these publish an ESLint 10-compatible peer range, or `eslint-config-next` ships full ESLint 10 support):
+1. `eslint-plugin-react` 7.38+/8.x → re-add `jsx-key` etc., or return to `eslint-config-next` if it supports ESLint 10 end-to-end
+2. `eslint-plugin-jsx-a11y` 6.11+ → re-add the six a11y rules
+3. `eslint-plugin-import` 2.33+ → re-add `no-anonymous-default-export`
 
 ---
 
