@@ -1,7 +1,7 @@
 # Recommendations & Decision Record
 
 **Created:** 2026-09-10
-**Last Updated:** 2026-09-10
+**Last Updated:** 2026-09-13
 **Related:** `docs/architecture_document.md` (v1.1)
 
 ---
@@ -18,7 +18,7 @@ A shareable record of architecture review findings and remaining recommendations
 |---|----------------|--------|
 | 1 | Clarify `PUT /recipes/{id}` as full-state update | ✅ Applied (arch v1.1) |
 | 2 | Narrow `GET /users/{id}/recipes` to owned recipes only | ✅ Applied (arch v1.1) |
-| 3 | Consider frontend-earlier implementation order | 📋 Open |
+| 3 | Learning-friendly implementation order | ✅ Adopted (2026-09-13) |
 | 4 | Define a tighter MVP finish line | 📋 Open |
 | 5 | Add a small e2e smoke test later | 📋 Open |
 | 6 | Harden unsigned Cloudinary uploads before public launch | ⚠️ Accepted risk (MVP) |
@@ -30,7 +30,9 @@ A shareable record of architecture review findings and remaining recommendations
 
 ### 1. Learning-friendly implementation order
 
-The current step plan is backend-heavy before frontend work begins. Consider an order that interleaves frontend and backend work:
+**Status:** ✅ Adopted (2026-09-13) — implementation proceeds in this order.
+
+The original step plan was backend-heavy before frontend work begins. The adopted order interleaves frontend and backend work:
 
 1. backend skeleton
 2. frontend scaffolding
@@ -42,6 +44,8 @@ The current step plan is backend-heavy before frontend work begins. Consider an 
 8. deployment and polish
 
 **Rationale:** earlier visible wins; backend learning stays tied to observable product behavior.
+
+**Mapping to dev-steps:** 1 → Step 2 (done) · 2 → Step 6 · 3 → Step 7 · 4 → Step 3 (User model) + Step 4 · 5 → Step 9 · 6 → Step 5 · 7 → Step 10 · 8 → Steps 11–13. Auth and recipe models get separate migrations instead of one up-front migration (dev-steps Step 3 split).
 
 ### 2. Tighter MVP finish line
 
@@ -137,6 +141,6 @@ Every update: bump `Last Updated:` and add dates to status changes.
 ## Next Steps
 
 1. Keep `docs/dev-steps_1-14.md` aligned with architecture doc changes
-2. Decide implementation order (recommendation #1)
+2. ✅ Adopted learning-friendly order (2026-09-13) — next: frontend scaffolding
 3. Proceed with backend → frontend scaffolding in the chosen order
 4. Add e2e smoke test after core flows exist
