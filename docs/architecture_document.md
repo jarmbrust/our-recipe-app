@@ -1,14 +1,15 @@
 # Our Recipe App — Architecture Document
 
-- **Version:** 1.1 (MVP)
+- **Version:** 1.2 (MVP)
 - **Created:** 2026-07-20
-- **Last Updated:** 2026-09-10
+- **Last Updated:** 2026-09-13
 - **Status:** Active
 
 ## Revision History
 
 | Version | Date | Notes |
 | ------- | ---- | ----- |
+| 1.2 | 2026-09-13 | Renamed auth cookie from `token` to `access_token` (leaves room for a future `refresh_token`). |
 | 1.1 | 2026-09-10 | Clarified `PUT /recipes/{id}` full-state update semantics and narrowed `GET /users/{id}/recipes` behavior. |
 | 1.0 | 2026-07-20 | Initial MVP architecture document. |
 
@@ -56,7 +57,7 @@ The authentication design uses a JWT stored in an `HttpOnly` cookie (see Section
 The cookie is issued by the backend scoped to the parent domain:
 
 ```
-Set-Cookie: token=<JWT>; HttpOnly; Secure; SameSite=Lax; Domain=.ourrecipeapp.com; Path=/; Max-Age=86400
+Set-Cookie: access_token=<JWT>; HttpOnly; Secure; SameSite=Lax; Domain=.ourrecipeapp.com; Path=/; Max-Age=86400
 ```
 
 `Domain=.ourrecipeapp.com` makes the cookie valid for all subdomains, so both `app.` and `api.` share it.
@@ -189,7 +190,7 @@ Response (201):
   "email": "james@example.com",
   "display_name": "James da Chef"
 }
-// Set-Cookie: token=<JWT>; HttpOnly; Secure; SameSite=Lax; Domain=.ourrecipeapp.com; Path=/; Max-Age=86400
+// Set-Cookie: access_token=<JWT>; HttpOnly; Secure; SameSite=Lax; Domain=.ourrecipeapp.com; Path=/; Max-Age=86400
 ```
 
 Errors: 409 (username/email exists), 422 (validation).
@@ -213,7 +214,7 @@ Response (200):
   "display_name": "James da Chef",
   "avatar_url": "https://res.cloudinary.com/..."
 }
-// Set-Cookie: token=<JWT>; HttpOnly; Secure; SameSite=Lax; Domain=.ourrecipeapp.com; Path=/; Max-Age=86400
+// Set-Cookie: access_token=<JWT>; HttpOnly; Secure; SameSite=Lax; Domain=.ourrecipeapp.com; Path=/; Max-Age=86400
 ```
 
 Errors: 401 (invalid credentials).
@@ -225,7 +226,7 @@ Errors: 401 (invalid credentials).
 ```
 Response (200):
 { "message": "Logged out" }
-// Set-Cookie: token=; HttpOnly; Secure; SameSite=Lax; Domain=.ourrecipeapp.com; Path=/; Max-Age=0
+// Set-Cookie: access_token=; HttpOnly; Secure; SameSite=Lax; Domain=.ourrecipeapp.com; Path=/; Max-Age=0
 ```
 
 ---
@@ -579,6 +580,7 @@ FastAPI auto-publishes an **OpenAPI 3** schema at `/openapi.json` on the live ba
 
 | Attribute  | Value               | Purpose                                           |
 | ---------- | ------------------- | ------------------------------------------------- |
+| `Name`     | `access_token`      | JWT access token, shared across subdomains        |
 | `HttpOnly` | yes                 | JS cannot read the token (XSS protection)         |
 | `Secure`   | yes                 | HTTPS only                                        |
 | `SameSite` | `Lax`               | Works across subdomains of one registrable domain |
@@ -599,7 +601,7 @@ Flow:
 3. If 401 -> user is logged out. Show login/register links.
 4. On navigation to protected route -> check Zustand state. If no user -> redirect to `/auth/login`.
 
-> **Next.js SSR cookie handling:** Next.js provides a `cookies()` API from `next/headers` that works in Server Components and Route Handlers. For server-side fetch calls to the backend that need the auth cookie, read the cookie via `cookies().get('token')` and forward it in the request headers. Client Components running in the browser send the cookie automatically.
+> **Next.js SSR cookie handling:** Next.js provides a `cookies()` API from `next/headers` that works in Server Components and Route Handlers. For server-side fetch calls to the backend that need the auth cookie, read the cookie via `cookies().get('access_token')` and forward it in the request headers. Client Components running in the browser send the cookie automatically.
 
 ### Redirect Behavior
 

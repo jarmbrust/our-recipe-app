@@ -163,7 +163,7 @@
 
 1. `app/services/security.py`: `hash_password` (passlib bcrypt), `verify_password`, `create_access_token(sub=user_id, expires_delta=...)`, `decode_access_token` raising `HTTPException(401)` on failure.
 2. `app/schemas/auth.py`: separate input and output Pydantic models. `RegisterIn`, `LoginIn`, `UserOut`, `UserUpdateIn`. Output schemas never include `password_hash`.
-3. `app/api/deps.py::get_current_user`: reads `token` cookie via `Request.cookies`, decodes JWT, queries user, returns ORM `User`. Raise **401** for missing/invalid (not 403).
+3. `app/api/deps.py::get_current_user`: reads `access_token` cookie via `Request.cookies`, decodes JWT, queries user, returns ORM `User`. Raise **401** for missing/invalid (not 403).
 4. `app/api/routes/auth.py`:
    - `POST /auth/register` — 409 on duplicate `username` or `email`; create user; issue JWT; set cookie; return `UserOut`.
    - `POST /auth/login` — verify password; issue JWT; set cookie; return `UserOut`.
@@ -235,7 +235,7 @@
 
 ## Step 7 — Frontend ↔ backend glue
 
-`lib/api.ts` exports a typed `openapi-fetch` client with `baseUrl: process.env.NEXT_PUBLIC_API_URL`. `lib/fetcher.ts` wraps it with `credentials: "include"` injected by default. `lib/serverApi.ts` is the SSR variant: reads `cookies()` from `next/headers` and forwards the `token` cookie in headers manually (per arch §5 + `AGENTS.md` SSR-cookie gotcha). FastAPI CORS uses `CORS_ORIGINS` env — comma-separated **exact origins** only (wildcard `*` is forbidden when `allow_credentials=True`).
+`lib/api.ts` exports a typed `openapi-fetch` client with `baseUrl: process.env.NEXT_PUBLIC_API_URL`. `lib/fetcher.ts` wraps it with `credentials: "include"` injected by default. `lib/serverApi.ts` is the SSR variant: reads `cookies()` from `next/headers` and forwards the `access_token` cookie in headers manually (per arch §5 + `AGENTS.md` SSR-cookie gotcha). FastAPI CORS uses `CORS_ORIGINS` env — comma-separated **exact origins** only (wildcard `*` is forbidden when `allow_credentials=True`).
 
 ## Step 8 — OpenAPI codegen
 
@@ -243,7 +243,7 @@ Wire `pnpm run codegen` to fetch backend `/openapi.json` → write `frontend/ope
 
 ## Step 9 — Auth UI
 
-`/auth/login` and `/auth/register` as Server Components rendering Client form components. `useAuthStore` (Zustand) holds `{ user: UserOut | null, initialized: boolean }`. Root layout calls `GET /auth/user` server-side via `lib/serverApi.ts` once and seeds the store via a `StoreHydration` client component (`AGENTS.md` Zustand SSR-hydration gotcha). `middleware.ts` matcher for `/recipes/create` and `/auth/profile` redirects to `/auth/login?redirect=...` when no `token` cookie present. Validate the `redirect` query parameter (must start with `/`, must not start with `//`, must not contain `:` before the first `/`); otherwise redirect to `/`.
+`/auth/login` and `/auth/register` as Server Components rendering Client form components. `useAuthStore` (Zustand) holds `{ user: UserOut | null, initialized: boolean }`. Root layout calls `GET /auth/user` server-side via `lib/serverApi.ts` once and seeds the store via a `StoreHydration` client component (`AGENTS.md` Zustand SSR-hydration gotcha). `middleware.ts` matcher for `/recipes/create` and `/auth/profile` redirects to `/auth/login?redirect=...` when no `access_token` cookie present. Validate the `redirect` query parameter (must start with `/`, must not start with `//`, must not contain `:` before the first `/`); otherwise redirect to `/`.
 
 ## Step 10 — Recipe frontend
 
