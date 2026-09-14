@@ -14,27 +14,27 @@ import globals from "globals";
  * for the re-add checklist.
  */
 const eslintConfig = defineConfig([
-    {
-        name: "next/core-web-vitals",
-        files: ["**/*.{js,jsx,mjs,ts,tsx,mts,cts}"],
-        ...nextPlugin.configs["core-web-vitals"],
+  {
+    name: "next/core-web-vitals",
+    files: ["**/*.{js,jsx,mjs,ts,tsx,mts,cts}"],
+    ...nextPlugin.configs["core-web-vitals"],
+  },
+  {
+    name: "react-hooks/recommended",
+    files: ["**/*.{js,jsx,mjs,ts,tsx,mts,cts}"],
+    ...reactHooks.configs.flat.recommended,
+  },
+  ...tseslint.configs.recommended,
+  {
+    name: "globals/browser-node",
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
     },
-    {
-        name: "react-hooks/recommended",
-        files: ["**/*.{js,jsx,mjs,ts,tsx,mts,cts}"],
-        ...reactHooks.configs.flat.recommended,
-    },
-    ...tseslint.configs.recommended,
-    {
-        name: "globals/browser-node",
-        languageOptions: {
-            globals: {
-                ...globals.browser,
-                ...globals.node,
-            },
-        },
-    },
-    globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+  },
+  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
 ]);
 
 export default eslintConfig;

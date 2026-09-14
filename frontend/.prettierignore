@@ -1,0 +1,8 @@
+node_modules/
+.next/
+out/
+build/
+pnpm-lock.yaml
+types/api.d.ts
+openapi.json
+.env*

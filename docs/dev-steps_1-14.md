@@ -33,7 +33,7 @@
    - `alembic/versions/__pycache__/`
    - `.env`, `.env.*`
    - `.DS_Store`
-   - `frontend/openapi.json` (reproducible; gitignore)
+   - `frontend/openapi.json` (reproducible; ignored via `frontend/.gitignore`)
    - `frontend/types/api.d.ts` is **committed** after codegen
 4. `.editorconfig`: 2-space indent for web, 4-space for `*.py`; LF line endings; `trim_trailing_whitespace = true`; `insert_final_newline = true`.
 5. `docker-compose.yml` — two services only:
@@ -239,7 +239,7 @@
 
 ## Step 8 — OpenAPI codegen
 
-Wire `pnpm run codegen` to fetch backend `/openapi.json` → write `frontend/openapi.json` → run `openapi-typescript` → emit `types/api.d.ts`. **Commit `types/api.d.ts`**; **gitignore `frontend/openapi.json`**. CI can run `pnpm run codegen && git diff --exit-code types/api.d.ts` to enforce regen discipline.
+Wire `pnpm run codegen` to fetch backend `/openapi.json` → write `frontend/openapi.json` → run `openapi-typescript` → emit `types/api.d.ts`. **Commit `types/api.d.ts`**; **gitignore `frontend/openapi.json`** (ignore entry lives in `frontend/.gitignore`). CI can run `pnpm run codegen && git diff --exit-code types/api.d.ts` to enforce regen discipline.
 
 ## Step 9 — Auth UI
 
