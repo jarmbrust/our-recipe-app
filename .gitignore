@@ -22,6 +22,7 @@ __pycache__/
 .Python
 .venv/
 .vscode/
+.zed/
 .idea/
 *.swp
 *.swo
@@ -36,4 +37,3 @@ out/
 htmlcov/
 .mypy_cache/
 .ruff_cache/
-frontend/openapi.json
