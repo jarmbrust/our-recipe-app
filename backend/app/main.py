@@ -7,7 +7,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
-from app.api.routes import health
+from app.api.routes import auth, health
 from app.config import settings
 
 
@@ -36,5 +36,6 @@ app.add_middleware(
 
 api_router = APIRouter(prefix="/api")
 api_router.include_router(health.router)
+api_router.include_router(auth.router)
 
 app.include_router(api_router)

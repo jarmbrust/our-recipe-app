@@ -1,14 +1,15 @@
 # Our Recipe App — Architecture Document
 
-- **Version:** 1.2 (MVP)
+- **Version:** 1.3 (MVP)
 - **Created:** 2026-07-20
-- **Last Updated:** 2026-09-13
+- **Last Updated:** 2026-09-14
 - **Status:** Active
 
 ## Revision History
 
 | Version | Date | Notes |
 | ------- | ---- | ----- |
+| 1.3 | 2026-09-14 | Replaced unmaintained `passlib` with direct `bcrypt` usage for password hashing. |
 | 1.2 | 2026-09-13 | Renamed auth cookie from `token` to `access_token` (leaves room for a future `refresh_token`). |
 | 1.1 | 2026-09-10 | Clarified `PUT /recipes/{id}` full-state update semantics and narrowed `GET /users/{id}/recipes` behavior. |
 | 1.0 | 2026-07-20 | Initial MVP architecture document. |
@@ -899,7 +900,7 @@ Added in a single `poetry add` call from `backend/`:
 | `asyncpg`             | Async Postgres driver (`create_async_engine(DATABASE_URL)`) | none                                                                                               |
 | `alembic`             | Migrations (used in Step 3)                                 | none                                                                                               |
 | `pyjwt`               | JWT sign/verify (HS256)                                     | none — HS256 doesn't need `[crypto]` extras                                                        |
-| `passlib[bcrypt]`     | Password hashing framework                                  | `bcrypt` (the actual C-extension hasher)                                                           |
+| `bcrypt` | Password hashing (used directly — `passlib` dropped: unmaintained since 2020) | none |
 | `python-multipart`    | Multipart form parser (`fastapi.Form(...)` deps)            | none — already a transitive of `fastapi[standard]`; listed explicitly is fine                      |
 | `loguru`              | Logging (JSON to stdout, captured by Railway)               | none                                                                                               |
 

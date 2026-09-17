@@ -60,7 +60,7 @@
    - `asyncpg`
    - `alembic`
    - `pyjwt`
-   - `passlib[bcrypt]`
+   - `bcrypt`
    - `python-multipart`
    - `loguru`
 
@@ -76,7 +76,7 @@
      asyncpg \
      alembic \
      pyjwt \
-     passlib[bcrypt] \
+     bcrypt \
      python-multipart \
      loguru
    ```
@@ -161,7 +161,7 @@
 
 **Goal:** All `auth/*` endpoints work, `Set-Cookie` headers correct per env, decoded JWT round-trips through `GET /auth/user`.
 
-1. `app/services/security.py`: `hash_password` (passlib bcrypt), `verify_password`, `create_access_token(sub=user_id, expires_delta=...)`, `decode_access_token` raising `HTTPException(401)` on failure.
+1. `app/services/security.py`: `hash_password` / `verify_password` (bcrypt directly — passlib dropped: unmaintained since 2020), `create_access_token(sub=user_id, expires_delta=...)`, `decode_access_token` raising `HTTPException(401)` on failure.
 2. `app/schemas/auth.py`: separate input and output Pydantic models. `RegisterIn`, `LoginIn`, `UserOut`, `UserUpdateIn`. Output schemas never include `password_hash`.
 3. `app/api/deps.py::get_current_user`: reads `access_token` cookie via `Request.cookies`, decodes JWT, queries user, returns ORM `User`. Raise **401** for missing/invalid (not 403).
 4. `app/api/routes/auth.py`:

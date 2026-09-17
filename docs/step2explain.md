@@ -46,7 +46,7 @@ poetry add \
   asyncpg \
   alembic \
   pyjwt \
-  passlib[bcrypt] \
+  bcrypt \
   python-multipart \
   loguru
 ```
@@ -61,7 +61,7 @@ poetry add \
 - `asyncpg` — fastest async Postgres driver. Use it at runtime; Alembic itself can still use sync `psycopg` for migrations.
 - `alembic` — migrations (Step 3 wires it up).
 - `pyjwt` — JWT encode/decode. Plain `jwt` API, no FastAPI-specific helpers.
-- `passlib[bcrypt]` — password hashing for `User.password_hash`.
+- `bcrypt` — password hashing for `User.password_hash` (used directly; passlib dropped as unmaintained).
 - `python-multipart` — required for FastAPI form/file parsing; without it, multipart endpoints 500.
 - `loguru` — JSON-to-stdout logger for Railway capture.
 

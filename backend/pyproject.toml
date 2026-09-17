@@ -15,7 +15,7 @@ dependencies = [
     "asyncpg (>=0.31.0,<0.32.0)",
     "alembic (>=1.19.0,<2.0.0)",
     "pyjwt (>=2.13.0,<3.0.0)",
-    "passlib[bcrypt] (>=1.7.4,<2.0.0)",
+    "bcrypt (>=5.0.0,<6.0.0)",
     "python-multipart (>=0.0.32,<0.0.33)",
     "loguru (>=0.7.3,<0.8.0)"
 ]
@@ -45,6 +45,10 @@ target-version = "py314"
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM"]
 
+[tool.ruff.lint.per-file-ignores]
+# Alembic generates these files from its own template (pre-py314 typing style)
+"alembic/versions/*" = ["E501", "I001", "W291", "UP007", "UP035"]
+
 [tool.ruff.format]
 quote-style = "preserve"
 
@@ -55,3 +59,6 @@ python_version = "3.14"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+pythonpath = ["."]
