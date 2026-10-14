@@ -3,7 +3,7 @@ import { AUTH_COOKIE_NAME } from "@/lib/auth-cookie";
 
 const PROTECTED_PATHS = ["/recipes/create", "/auth/profile"];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isProtected = PROTECTED_PATHS.some(

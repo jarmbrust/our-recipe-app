@@ -1,7 +1,7 @@
 # Recommendations & Decision Record
 
 **Created:** 2026-09-10
-**Last Updated:** 2026-09-14
+**Last Updated:** 2026-10-14
 **Related:** `docs/architecture_document.md` (v1.3)
 
 ---
@@ -150,6 +150,10 @@ deployed over HTTPS, responsive polish, Sentry, smoke e2e test
 1. `eslint-plugin-react` 7.38+/8.x → re-add `jsx-key` etc., or return to `eslint-config-next` if it supports ESLint 10 end-to-end
 2. `eslint-plugin-jsx-a11y` 6.11+ → re-add the six a11y rules
 3. `eslint-plugin-import` 2.33+ → re-add `no-anonymous-default-export`
+
+### `braces` DoS advisory — accepted risk (2026-10-14)
+
+**CVE-2026-93687** (`braces <= 3.0.3`): no patched version published yet. Dev-only transitive of `@next/eslint-plugin-next` (via `fast-glob → micromatch`); never shipped to the browser. Accepted — re-check on the next dependency pass and update via `pnpm audit --fix=update` (or a `^3.0.4` override) once upstream publishes a fix.
 
 ---
 
